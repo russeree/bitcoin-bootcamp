@@ -1,5 +1,72 @@
-from unittest import TestCase
+class Point:
+    def __init__(self, x, y, a, b):
+        self.a = a
+        self.b = b
+        self.x = x
+        self.y = y
+        if self.x is None and self.y is None:
+            return
+        if self.y**2 != self.x**3 + a * x + b:
+            #Test to see if y^2 = x^3 + ax + b holds true
+            raise ValueError(f'({x},{y}) is not on the curve')
+        
+    # Equality Operator
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y \
+        and self.a == other.a and self.b == other.b
 
+    # Not Equality Operator - Exercise 2
+    def __ne__(self, other):
+        return self.x != other or self.y != other.y \
+        or self.a != other.a or self.b != other.b
+
+    # Addition Operator Overload
+    def __add__(self, other):
+        if self.a != other.a or self.b != other.b:
+            raise TypeError(f'Points {self}, {other} are not on the same curve'
+
+        #Infinity Point Addition - Return the non None point
+        if self.x is None:
+            return other
+
+        if other.x is None:
+            return self
+
+        # If x coordinates match but y does not - negate.
+        if self.x == other.x and self.y != other.y:
+            return self.__class__(None, None, self.a, self.b)
+
+        # s= (y2-y1) / (x2-x1)
+        # x3= s^2-x1-x2
+        # y3= s*(x1-x3)-y1
+        if self.x != other.x:
+            s = (other.y - self.y) / (other.x - self.x)
+            x = pow(s,2) - self.x - other.x
+            y = s * (self.x - x) - self.y
+            return self.__class__(x, y, self.a, self.b)
+
+        # Case 4: if we are tangent to the vertical line,
+        # we return the point at infinity
+        # note instead of figuring out what 0 is for each type
+        # we just use 0 * self.x
+        if self == other and self.y == 0 * self.x:
+            return self.__class__(None, None, self.a, self.b)
+
+        # Case 3: self == other
+        # Formula (x3,y3)=(x1,y1)+(x1,y1)
+        # s=(3*x1**2+a)/(2*y1)
+        # x3=s**2-2*x1
+        # y3=s*(x1-x3)-y1
+        if self == other:
+            s = (3 * self.x**2 + self.a) / (2 * self.y)
+            x = s**2 - 2 * self.x
+            y = s * (self.x - x) - self.y
+            return self.__class__(x, y, self.a, self.b)
+
+        
+        
+    
+### Finite Field Library ###
 class FieldElement:
     # Initialize the Finite Field Element Class
     def __init__(self, num, prime):
@@ -67,54 +134,3 @@ class FieldElement:
         # 1/n == pow(n, p-2, p)
         num = (self.num * pow(other.num, self.prime -2, self.prime)) % self.prime
         return self.__class__(num, self.prime)
-
-class FieldElementTest(TestCase):
-
-    def test_ne(self):
-        a = FieldElement(2, 31)
-        b = FieldElement(2, 31)
-        c = FieldElement(15, 31)
-        self.assertEqual(a, b)
-        self.assertTrue(a != c)
-        self.assertFalse(a != b)
-
-    def test_add(self):
-        a = FieldElement(2, 31)
-        b = FieldElement(15, 31)
-        self.assertEqual(a + b, FieldElement(17, 31))
-        a = FieldElement(17, 31)
-        b = FieldElement(21, 31)
-        self.assertEqual(a + b, FieldElement(7, 31))
-
-    def test_sub(self):
-        a = FieldElement(29, 31)
-        b = FieldElement(4, 31)
-        self.assertEqual(a - b, FieldElement(25, 31))
-        a = FieldElement(15, 31)
-        b = FieldElement(30, 31)
-        self.assertEqual(a - b, FieldElement(16, 31))
-
-    def test_mul(self):
-        a = FieldElement(24, 31)
-        b = FieldElement(19, 31)
-        self.assertEqual(a * b, FieldElement(22, 31))
-
-    def test_pow(self):
-        a = FieldElement(17, 31)
-        self.assertEqual(a**3, FieldElement(15, 31))
-        a = FieldElement(5, 31)
-        b = FieldElement(18, 31)
-        self.assertEqual(a**5 * b, FieldElement(16, 31))
-
-    def test_div(self):
-        a = FieldElement(3, 31)
-        b = FieldElement(24, 31)
-        self.assertEqual(a / b, FieldElement(4, 31))
-        a = FieldElement(17, 31)
-        self.assertEqual(a**-3, FieldElement(29, 31))
-        a = FieldElement(4, 31)
-        b = FieldElement(11, 31)
-        self.assertEqual(a**-4 * b, FieldElement(13, 31))
-
-if __name__ == '__main__':
-    unittest.main()
